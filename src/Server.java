@@ -93,6 +93,7 @@ public class Server {
         ServerSocket serverSocket = new ServerSocket(port);
         System.out.print("Receiver listening on the port " + port + ".");
         Socket socket = serverSocket.accept();  // accepting the connection.
+        System.out.println(">>Accept client from IP: "+socket.getRemoteSocketAddress().toString());
         clientThread t = new clientThread(socket);
         t.run();
         serverSocket.close();
