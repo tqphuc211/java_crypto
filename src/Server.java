@@ -72,8 +72,8 @@ public class Server {
 	 */
 	
 	public static void main(String[] args) throws IOException, GeneralSecurityException{
-		RSA rsa = new RSA();
-		rsa.createRSA();
+		//RSA rsa = new RSA();
+		//rsa.createRSA();
 		int port = 8002;
 		Server server = new Server(port);
 		server.start();
