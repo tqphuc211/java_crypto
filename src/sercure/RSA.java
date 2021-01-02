@@ -1,3 +1,4 @@
+package sercure;
 /**
  * RSA.java
  * <p>
@@ -59,8 +60,8 @@ public class RSA {
         KeyFactory fact = KeyFactory.getInstance("RSA");
         RSAPublicKeySpec pub = fact.getKeySpec(kPair.getPublic(), RSAPublicKeySpec.class);
         RSAPrivateKeySpec priv = fact.getKeySpec(kPair.getPrivate(), RSAPrivateKeySpec.class);
-        serializeToFile("public.key", pub.getModulus(), pub.getPublicExponent());                // this will give public key file
-        serializeToFile("private.key", priv.getModulus(), priv.getPrivateExponent());            // this will give private key file
+        serializeToFile("sercure/public.key", pub.getModulus(), pub.getPublicExponent());                // this will give public key file
+        serializeToFile("sercure/private.key", priv.getModulus(), priv.getPrivateExponent());            // this will give private key file
 
     }
 

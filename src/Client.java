@@ -148,6 +148,7 @@ public class Client {
                 } catch (Exception e) {
                     e.printStackTrace();
                     System.out.println("connection closed");
+                    return;
                 }
             }
         }
@@ -233,7 +234,7 @@ public class Client {
         cipher1 = null;
         byte[] key = null;
         try {
-            PublicKey pK = readPublicKeyFromFile("public.key");
+            PublicKey pK = readPublicKeyFromFile("sercure/public.key");
             System.out.println("Encrypting the AES key using RSA Public Key" + pK);
             // initialize the cipher with the user's public key
             cipher1 = Cipher.getInstance("RSA/ECB/PKCS1Padding");
