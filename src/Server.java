@@ -1,138 +1,76 @@
-/**
- * Server.java
- * <p>
- * Dependency: RSA.java, message.java
- * <p>
- * Compile	 	$javac Server.java
- * Run 			$java Server
- * <p>
- * <p>
- * References:
- * http://docs.oracle.com/javase/7/docs/technotes/guides/security/crypto/CryptoSpec.html
- * http://www.javamex.com/tutorials/cryptography/rsa_encryption.shtml
- */
-
-
+import sercure.AES;
 import sercure.RSA;
 
+import java.net.InetSocketAddress;
 import java.security.*;
-import java.security.spec.RSAPrivateKeySpec;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 import java.io.*;
-import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 import javax.crypto.*;
-import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 
-/**
- *
- * public class Server
- *
- * 					The server program will open a socket listening on TCP port 8002.
- * 					Client program will establish connection over the socket and send encrypted messages to the server.
- *
- *
- *
- */
-
 public class Server {
-
-    private ObjectOutputStream sOutput;
-    private ObjectInputStream sInput;
-    private Cipher keyDecipher;
-    private Cipher ServerDecryptCipher;
-    private Cipher ServerEncryptCipher;
-    SecretKey AESKey;
-    int i;
-    byte[] input;
-    private message m;
+    int clientId = 0;
     int port;
-    static String IV = "AAAAAAAAAAAAAAAA";
-    message toSend;
+    public static Map<String, clientThread> cThread;
 
 
     public Server(int port) {
         this.port = port;
     }
 
-    /*
-     *
-     * the main method
-     * 					will instantiate RSA object to create RSA public - private key pair and save it as "public.key"
-     * 					and "private.key" files in the same directory.
-     *
-     * 					The method will create server object and call start() method.
-     *
-     *
-     *
-     */
-
     public static void main(String[] args) throws IOException, GeneralSecurityException {
 //		RSA rsa = new RSA();
 //		rsa.createRSA();
         int port = 8002;
+        cThread= new HashMap<>();
         Server server = new Server(port);
         server.start();
     }
 
-    /*
-     * the start method:
-     * 					Will create a server socket listening for connections on TCP port 8002.
-     *
-     * 					After the connection is established, the individual connection will run as independent thread.
-     *
-     *
-     */
-
-
     void start() throws IOException {
         ServerSocket serverSocket = new ServerSocket(port);
         System.out.print("Receiver listening on the port " + port + ".");
-        Socket socket = serverSocket.accept();  // accepting the connection.
-        System.out.println(">>Accept client from IP: "+socket.getRemoteSocketAddress().toString());
-        clientThread t = new clientThread(socket);
-        t.run();
-        serverSocket.close();
-    }
-
-
-    /*
-     * clientThread class. Extends thread.
-     *
-     * 						It will operate on the socket established from the start method.
-     * 						The thread will access the input and output streams of the socket
-     * 						 to receive and send messages from client.
-     *
-     */
-
-    class clientThread extends Thread {
-        Socket socket;
-
-        clientThread(Socket socket) throws IOException {
-            this.socket = socket;
-            sOutput = new ObjectOutputStream(socket.getOutputStream());
-            sInput = new ObjectInputStream(socket.getInputStream());
-            new listenFromClient().start();
-            new sendToClient().start();
+        try {
+            new getInput().start();
+            while (true) {
+                Socket socket = serverSocket.accept();  // accepting the connection.
+                String ip = (((InetSocketAddress) socket.getRemoteSocketAddress()).getAddress()).toString().replace("/", "");
+                System.out.println(">>IP: " + ip);
+                System.out.println(">>Accept client from IP: " + socket.getRemoteSocketAddress().toString());
+                clientThread t = new clientThread(socket, ++clientId, ip);
+                t.start();
+                cThread.put(clientId+"", t);
+            }
+        } finally {
+            serverSocket.close();
         }
     }
 
-    /*
-     * listenFromClient class. Extends thread.
-     *
-     * 						Continuously listens for the incoming messages from the server.
-     * 						Once received, deciphers it and prints on the server console
-     *
-     */
+    class clientThread extends Thread {
+        private ObjectOutputStream sOutput;
+        private ObjectInputStream sInput;
+        Socket socket;
+        int i=0;
+        private int clientId;
+        private String clientIp;
+        public SecretKey AESKey;
 
-    class listenFromClient extends Thread {
+        clientThread(Socket socket, int clientId, String clientIp) throws IOException {
+            this.socket = socket;
+            this.clientId = clientId;
+            this.clientIp = clientIp;
+            sOutput = new ObjectOutputStream(socket.getOutputStream());
+            sInput = new ObjectInputStream(socket.getInputStream());
+        }
 
         public void run() {
-
+            message m;
             while (true) {
                 try {
                     m = (message) sInput.readObject();
@@ -142,12 +80,14 @@ public class Server {
                     return;
                 } catch (IOException e) {
                     e.printStackTrace();
-					return;
+                    return;
                 }
 
                 if (i == 0) {
                     if (m.getData() != null) {
-                        decryptAESKey(m.getData());
+                        byte[] decryptedMessage = RSA.decryptMessage(m.getData());
+                        System.out.println(">>decryptedMessage:" + decryptedMessage);
+                        AESKey = new SecretKeySpec(decryptedMessage, "AES");
                         System.out.println();
                         i++;
                     } else {
@@ -156,103 +96,54 @@ public class Server {
                     }
                 } else {
                     if (m.getData() != null) {
-                        decryptMessage(m.getData());
+                        showMessage(clientId, clientIp, m.getData(), AESKey);
                     }
                 }
             }
         }
+
+        public synchronized void sendToClient(message ms) throws IOException {
+            sOutput.writeObject(ms);
+            sOutput.reset();
+        }
+
     }
 
+    class getInput extends Thread {
 
-    /*
-     * sendToClient class. Extends thread.
-     *
-     * 						Takes input form system.in, call encryption on the message and sends it to the client.
-     *
-     */
-
-
-    class sendToClient extends Thread {
         public void run() {
             while (true) {
                 try {
                     System.out.println("Sever: Enter OUTGOING  message : > ");
                     Scanner sc = new Scanner(System.in);
                     String s = sc.nextLine();
-                    toSend = null;
-                    toSend = new message(encryptMessage(s));
-                    //		System.out.println("new message: " + toSend);
 
-                    //	sOutput.writeObject(toSend);
-                    write();
+                    int p = s.indexOf(':');
+                    String id = s.substring(0, p);
+                    s = s.substring(p + 1);
+
+                    clientThread t=cThread.get(id);
+                    if (t!=null){
+                        message toSend = null;
+                        byte[] encryptedmessage = AES.encryptMessage(s, t.AESKey);
+                        toSend = new message(encryptedmessage);
+                        t.sendToClient(toSend);
+                    }else{
+                        System.out.println("No thread "+ clientId+" found!");
+                    }
+
                 } catch (Exception e) {
                     e.printStackTrace();
                     System.out.println("No message sent to server");
-                    break;
                 }
             }
         }
-
-        public synchronized void write() throws IOException {
-            sOutput.writeObject(toSend);
-            sOutput.reset();
-        }
     }
 
-
-    /*
-     * // ====== Receive the encrypted AES key from server and decipher it
-     *
-     *
-     * decryptAESKey method
-     * 					will use RSA private key from the public - private key pair to
-     * 					decipher the AES key encrypted using public key and sent by the client.
-     *
-     * @param byte[] encryptedData
-     * 							The encrypted key as byte array.
-     *
-     *
-     */
-
-
-    private void decryptAESKey(byte[] encryptedKey) {
-        SecretKey key = null;
-        PrivateKey privKey = null;
-        keyDecipher = null;
+    private void showMessage(int clientId, String clientIp, byte[] encryptedMessage, SecretKey AESKey) {
         try {
-            privKey = readPrivateKeyFromFile("sercure/private.key");            //  private key
-            keyDecipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");        // initialize the cipher...
-            keyDecipher.init(Cipher.DECRYPT_MODE, privKey);
-            key = new SecretKeySpec(keyDecipher.doFinal(encryptedKey), "AES");
-            System.out.println();
-            System.out.println(" AES key after decryption : " + key);
-            i = 1;
-            AESKey = key;
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("exception decrypting the aes key: " + e.getMessage());
-        }
-
-    }
-
-
-    /*
-     * //=========== Decipher/decrypt the encrypted message using AES key =================
-     *
-     * decryptMessage method.
-     * 						Deciphers the encrypted message received from the client.
-     * 						Takes byte array of the encrypted message as input.
-     *
-     *
-     */
-
-    private void decryptMessage(byte[] encryptedMessage) {
-        ServerDecryptCipher = null;
-        try {
-            ServerDecryptCipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-            ServerDecryptCipher.init(Cipher.DECRYPT_MODE, AESKey, new IvParameterSpec(IV.getBytes()));
-            byte[] msg = ServerDecryptCipher.doFinal(encryptedMessage);
-            System.out.println("Server: INCOMING Message From CLIENT >> " + new String(msg));
+            byte[] msg = AES.decryptMessage(encryptedMessage, AESKey);
+            System.out.println("Server: INCOMING Message From CLIENT >> " + clientId + "(" + clientIp + "): " + new String(msg));
             System.out.println("Sever: Enter OUTGOING  message : > ");
         } catch (Exception e) {
             e.getCause();
@@ -260,60 +151,4 @@ public class Server {
             System.out.println("Exception genereated in decryptData method. Exception Name  :" + e.getMessage());
         }
     }
-
-    /*
-     * //===========  Encrypted message using AES key =================
-     *
-     * encryptMessage method
-     * 						Takes the message string as input and encrypts it.
-     *
-     *
-     */
-
-
-    private byte[] encryptMessage(String s) throws NoSuchAlgorithmException, NoSuchPaddingException,
-            InvalidKeyException, InvalidAlgorithmParameterException, IllegalBlockSizeException,
-            BadPaddingException {
-        ServerEncryptCipher = null;
-        byte[] cipherText = null;
-        ServerEncryptCipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-        ServerEncryptCipher.init(Cipher.ENCRYPT_MODE, AESKey, new IvParameterSpec(IV.getBytes()));
-        cipherText = ServerEncryptCipher.doFinal(s.getBytes());
-
-        return cipherText;
-    }
-
-
-
-    /*
-     * // ================= Read private Key from the file=======================
-     *
-     * readPrivateKeyFromFile method
-     * 								reads the RSA private key from private.key file saved in same directory.
-     * 								the private key is used to decrypt/decipher the AES key sent by Client.
-     *
-     *
-     *
-     */
-
-
-    PrivateKey readPrivateKeyFromFile(String fileName) throws IOException {
-
-        FileInputStream in = new FileInputStream(fileName);
-        ObjectInputStream readObj = new ObjectInputStream(new BufferedInputStream(in));
-
-        try {
-            BigInteger m = (BigInteger) readObj.readObject();
-            BigInteger d = (BigInteger) readObj.readObject();
-            RSAPrivateKeySpec keySpec = new RSAPrivateKeySpec(m, d);
-            KeyFactory fact = KeyFactory.getInstance("RSA");
-            PrivateKey priKey = fact.generatePrivate(keySpec);
-            return priKey;
-        } catch (Exception e) {
-            throw new RuntimeException("Some error in reading private key", e);
-        } finally {
-            readObj.close();
-        }
-    }
 }
-
