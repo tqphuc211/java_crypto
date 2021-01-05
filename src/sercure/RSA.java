@@ -20,7 +20,7 @@ public class RSA {
         rsa.createRSA();
     }
 
-    void createRSA() throws NoSuchAlgorithmException, GeneralSecurityException, IOException {
+    public void createRSA() throws NoSuchAlgorithmException, GeneralSecurityException, IOException {
 
         KeyPairGenerator kPairGen = KeyPairGenerator.getInstance("RSA");
         kPairGen.initialize(1024);

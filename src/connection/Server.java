@@ -1,3 +1,5 @@
+package connection;
+
 import sercure.AES;
 import sercure.RSA;
 
@@ -25,10 +27,10 @@ public class Server {
     }
 
     public static void main(String[] args) throws IOException, GeneralSecurityException {
-//		RSA rsa = new RSA();
-//		rsa.createRSA();
+//        RSA rsa = new RSA();
+//        rsa.createRSA();
         int port = 8002;
-        cThread= new HashMap<>();
+        cThread = new HashMap<>();
         Server server = new Server(port);
         server.start();
     }
@@ -37,7 +39,7 @@ public class Server {
         ServerSocket serverSocket = new ServerSocket(port);
         System.out.print("Receiver listening on the port " + port + ".");
         try {
-            new getInput().start();
+//            new getInput().start();
             while (true) {
                 Socket socket = serverSocket.accept();  // accepting the connection.
                 String ip = (((InetSocketAddress) socket.getRemoteSocketAddress()).getAddress()).toString().replace("/", "");
@@ -45,7 +47,7 @@ public class Server {
                 System.out.println(">>Accept client from IP: " + socket.getRemoteSocketAddress().toString());
                 clientThread t = new clientThread(socket, ++clientId, ip);
                 t.start();
-                cThread.put(clientId+"", t);
+                cThread.put(clientId + "", t);
             }
         } finally {
             serverSocket.close();
@@ -56,7 +58,7 @@ public class Server {
         private ObjectOutputStream sOutput;
         private ObjectInputStream sInput;
         Socket socket;
-        int i=0;
+        int i = 0;
         private int clientId;
         private String clientIp;
         public SecretKey AESKey;
@@ -122,14 +124,14 @@ public class Server {
                     String id = s.substring(0, p);
                     s = s.substring(p + 1);
 
-                    clientThread t=cThread.get(id);
-                    if (t!=null){
+                    clientThread t = cThread.get(id);
+                    if (t != null) {
                         message toSend = null;
                         byte[] encryptedmessage = AES.encryptMessage(s, t.AESKey);
                         toSend = new message(encryptedmessage);
                         t.sendToClient(toSend);
-                    }else{
-                        System.out.println("No thread "+ clientId+" found!");
+                    } else {
+                        System.out.println("No thread " + clientId + " found!");
                     }
 
                 } catch (Exception e) {

@@ -1,23 +1,6 @@
-/**
- * message.java 
- * 
- * 
- * Compile	 	$javac message.java 
- * 
- */
-
-
+package connection;
 
 import java.io.Serializable;
-
-
-/*
- * public class message
- * 
- * 					Creates an serializable object with contains the message 
- * 					to be exchanged between Client and Server.
- */
-
 
 public class message implements Serializable{
 		

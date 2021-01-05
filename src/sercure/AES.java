@@ -3,10 +3,7 @@ package sercure;
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import java.io.*;
-import java.math.BigInteger;
 import java.security.*;
-import java.security.spec.RSAPrivateKeySpec;
-import java.security.spec.RSAPublicKeySpec;
 import java.util.Base64;
 
 public class AES {
