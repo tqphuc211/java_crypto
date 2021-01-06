@@ -84,7 +84,7 @@ public class Server {
         ServerSocket serverSocket = new ServerSocket(port);
         System.out.print("Receiver listening on the port " + port + ".");
         try {
-            new getInput().start();
+//            new getInput().start();
             while (true) {
                 Socket socket = serverSocket.accept();  // accepting the connection.
                 String ip = (((InetSocketAddress) socket.getRemoteSocketAddress()).getAddress()).toString().replace("/", "");
