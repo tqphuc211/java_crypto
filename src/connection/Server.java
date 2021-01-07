@@ -5,7 +5,9 @@ import sercure.RSA;
 
 import java.net.InetSocketAddress;
 import java.security.*;
-import java.sql.*;
+
+import cms.dao;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -31,53 +33,9 @@ public class Server {
 //        rsa.createRSA();
         int port = 8002;
         cThread = new HashMap<>();
-        initDB();
+        dao.getListAccount("offline");
         Server server = new Server(port);
         server.start();
-    }
-
-    public static void initDB(){
-        try {
-            Class.forName("org.sqlite.JDBC");
-            String dbURL = "jdbc:sqlite:db.db";
-            Connection conn = DriverManager.getConnection(dbURL);
-            if (conn != null) {
-                System.out.println("Connected to the database");
-                DatabaseMetaData dm = (DatabaseMetaData) conn.getMetaData();
-                System.out.println("Driver name: " + dm.getDriverName());
-                System.out.println("Driver version: " + dm.getDriverVersion());
-                System.out.println("Product name: " + dm.getDatabaseProductName());
-                System.out.println("Product version: " + dm.getDatabaseProductVersion());
-
-                Statement stmt = conn.createStatement();
-                ResultSet rs = stmt.executeQuery( "SELECT * FROM account;" );
-
-                while ( rs.next() ) {
-                    int id = rs.getInt("id");
-                    String  name = rs.getString("name");
-                    int age  = rs.getInt("id");
-                    String  address = rs.getString("ip");
-                    String  salary = rs.getString("state");
-                    String  key = rs.getString("public_key");
-
-                    System.out.println( "ID = " + id );
-                    System.out.println( "NAME = " + name );
-                    System.out.println( "AGE = " + age );
-                    System.out.println( "ADDRESS = " + address );
-                    System.out.println( "SALARY = " + salary );
-                    System.out.println( "KEY = " + key );
-                    System.out.println();
-                }
-                rs.close();
-                stmt.close();
-
-                conn.close();
-            }
-        } catch (ClassNotFoundException ex) {
-            ex.printStackTrace();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
     }
 
     void start() throws IOException {
@@ -118,6 +76,13 @@ public class Server {
 
         public void run() {
             message m;
+
+            try {
+                sendToClient(new message(RSA.getPublicKey()));
+            } catch (Exception ex) {
+                System.out.println("Error send public key to client " + clientIp);
+            }
+
             while (true) {
                 try {
                     m = (message) sInput.readObject();

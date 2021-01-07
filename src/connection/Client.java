@@ -6,6 +6,8 @@ import sercure.RSA;
 import java.io.*;
 import java.net.Socket;
 import java.security.*;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 import java.util.Scanner;
 import javax.crypto.*;
 
@@ -17,7 +19,7 @@ public class Client {
     private Socket socket;
     private String server;
     private int port;
-    int i = 0;
+    int i = -1;
     message m;
     SecretKey AESkey;
 
@@ -66,9 +68,19 @@ public class Client {
     class listenFromServer extends Thread {
         public void run() {
             while (true) {
+                System.out.println("i: " + i);
                 try {
                     m = (message) sInput.readObject();
-                    showMessage(m.getData());
+                    if (i >= 0) {
+                        showMessage(m.getData());
+                    } else {
+                        System.out.println(Base64.getEncoder().encodeToString(m.getData()));
+                        KeyFactory kF = KeyFactory.getInstance("RSA");
+                        PublicKey public_key = (PublicKey) kF.generatePublic(new X509EncodedKeySpec(m.getData()));
+                        System.out.println("FINAL OUTPUT" + public_key);
+                        System.out.println(">>RSA public key>" + Base64.getEncoder().encodeToString(public_key.getEncoded()));
+                        i = 0;
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                     System.out.println("connection closed");
@@ -80,18 +92,22 @@ public class Client {
 
     class sendToServer extends Thread {
         public void run() {
+            System.out.println("WAIT PUBLIC KEY FROM SERVER...");
             while (true) {
                 try {
-
                     if (i == 0) {
+                        System.out.println("send to server i: " + i);
+                        System.out.println("SEND AES KEY TO SERVER");
                         message toSend = null;
 
                         byte[] encoded_AES_key = RSA.encryptMessage(AESkey.getEncoded());
                         toSend = new message(encoded_AES_key);
                         sOutput.writeObject(toSend);
                         i = 1;
+                    } else if (i == -1) {
+                        Scanner sc = new Scanner(System.in);
                     } else {
-
+                        System.out.println("send to server i: " + i);
                         System.out.println("CLIENT: Enter OUTGOING message > ");
                         Scanner sc = new Scanner(System.in);
                         String s = sc.nextLine();

@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.security.*;
 import java.security.spec.*;
 import java.util.Base64;
+
 import config.config;
 
 public class RSA {
@@ -98,7 +99,7 @@ public class RSA {
             privKey = readPrivateKeyFromFile(config.release.get(config.PRIVATE_KEY_PATH));            //  private key
             keyDecipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");        // initialize the cipher...
             keyDecipher.init(Cipher.DECRYPT_MODE, privKey);
-            System.out.println(">>AES>"+ Base64.getEncoder().encodeToString(keyDecipher.doFinal(encryptedMessage)));
+            System.out.println(">>AES>" + Base64.getEncoder().encodeToString(keyDecipher.doFinal(encryptedMessage)));
             message = keyDecipher.doFinal(encryptedMessage);
             System.out.println();
             System.out.println(" AES key after decryption : " + message);
@@ -107,6 +108,20 @@ public class RSA {
             System.out.println("exception decrypting the aes key: " + e.getMessage());
         }
         return message;
+    }
+
+    public static byte[] getPublicKey() {
+        byte[] key= null;
+        try {
+            PublicKey pK = readPublicKeyFromFile(config.release.get(config.PUBLIC_KEY_PATH));
+            System.out.println("Get RSA Public Key for client: " + pK);
+            key=pK.getEncoded();
+            System.out.println(">>RSA public key>" + Base64.getEncoder().encodeToString(pK.getEncoded()));
+        } catch (Exception e) {
+            System.out.println("exception get key: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return key;
     }
 
     private static PublicKey readPublicKeyFromFile(String fileName) throws IOException {
