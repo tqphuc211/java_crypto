@@ -1,5 +1,7 @@
 package connection;
 
+import cms.service;
+import com.google.gson.JsonObject;
 import sercure.AES;
 import sercure.RSA;
 
@@ -108,7 +110,17 @@ public class Server {
                     }
                 } else {
                     if (m.getData() != null) {
-                        showMessage(clientId, clientIp, m.getData(), AESKey);
+//                        showMessage(clientId, clientIp, m.getData(), AESKey);
+                        byte[] msg = AES.decryptMessage(m.getData(), AESKey);
+                        JsonObject rs = service.route(msg);
+                        System.out.println(">>rs> \n" + rs.toString());
+                        try {
+                            message toSend = null;
+                            byte[] encryptedmessage = AES.encryptMessage(rs.toString(), AESKey);
+                            toSend = new message(encryptedmessage);
+                            sendToClient(toSend);
+                        } catch (Exception ex) {
+                        }
                     }
                 }
             }
@@ -118,7 +130,6 @@ public class Server {
             sOutput.writeObject(ms);
             sOutput.reset();
         }
-
     }
 
     class getInput extends Thread {
