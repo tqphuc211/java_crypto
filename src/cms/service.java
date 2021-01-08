@@ -142,10 +142,13 @@ public class service {
 
 
         try {
+            JsonObject info = new JsonObject();
+            info.addProperty("id", acc.getId());
+            info.addProperty("public_key", acc.getPublic_key());
+            byte[] sign = Signing.rsaSign((RSAPrivateKey) RSA.getPrivateKey(), info.toString().getBytes());
+
             JsonObject cerObj = new JsonObject();
-            cerObj.addProperty("id", acc.getId());
-            cerObj.addProperty("public_key", acc.getPublic_key());
-            byte[] sign = Signing.rsaSign((RSAPrivateKey) RSA.getPrivateKey(), cerObj.toString().getBytes());
+            cerObj.add("info", new Gson().toJsonTree(info));
             cerObj.addProperty("sign", Base64.getEncoder().encodeToString(sign));
             acc.setCer(cerObj.toString());
         } catch (Exception ex) {
