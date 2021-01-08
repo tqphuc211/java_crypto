@@ -112,7 +112,7 @@ public class Server {
                     if (m.getData() != null) {
 //                        showMessage(clientId, clientIp, m.getData(), AESKey);
                         byte[] msg = AES.decryptMessage(m.getData(), AESKey);
-                        JsonObject rs = service.route(msg);
+                        JsonObject rs = service.route(msg, clientIp);
                         System.out.println(">>rs> \n" + rs.toString());
                         try {
                             message toSend = null;
