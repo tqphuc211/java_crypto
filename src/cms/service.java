@@ -96,6 +96,8 @@ public class service {
             return returnError(400);
 
         dto acc = dao.login(data.get("name").getAsString(), data.get("pass").getAsString());
+        if (acc == null)
+            return returnLogicError(404, "Tài khoản không đúng");
         setLoginInfo(acc, ip);
         rs.addProperty("status_code", 200);
         rs.add("data", new JsonParser().parse(new Gson().toJson(acc)));
