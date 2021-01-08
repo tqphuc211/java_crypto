@@ -4,6 +4,7 @@ import javax.crypto.Cipher;
 import java.io.*;
 import java.math.BigInteger;
 import java.security.*;
+import java.security.interfaces.RSAPublicKey;
 import java.security.spec.*;
 import java.util.Base64;
 
@@ -111,17 +112,47 @@ public class RSA {
     }
 
     public static byte[] getPublicKey() {
-        byte[] key= null;
+        byte[] key = null;
         try {
             PublicKey pK = readPublicKeyFromFile(config.release.get(config.PUBLIC_KEY_PATH));
             System.out.println("Get RSA Public Key for client: " + pK);
-            key=pK.getEncoded();
+            key = pK.getEncoded();
             System.out.println(">>RSA public key>" + Base64.getEncoder().encodeToString(pK.getEncoded()));
         } catch (Exception e) {
             System.out.println("exception get key: " + e.getMessage());
             e.printStackTrace();
         }
         return key;
+    }
+
+    public static PublicKey getPublicKey1() {
+        byte[] key = null;
+        try {
+            PublicKey pK = readPublicKeyFromFile(config.release.get(config.PUBLIC_KEY_PATH));
+            System.out.println("Get RSA Public Key for client: " + pK);
+            key = pK.getEncoded();
+            System.out.println(">>RSA public key>" + Base64.getEncoder().encodeToString(pK.getEncoded()));
+            return pK;
+        } catch (Exception e) {
+            System.out.println("exception get key: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static PrivateKey getPrivateKey() {
+        byte[] key = null;
+        try {
+            PrivateKey pK = readPrivateKeyFromFile(config.release.get(config.PRIVATE_KEY_PATH));
+            System.out.println("Get RSA Private Key for sign: " + pK);
+            key = pK.getEncoded();
+            System.out.println(">>RSA private key>" + Base64.getEncoder().encodeToString(pK.getEncoded()));
+            return pK;
+        } catch (Exception e) {
+            System.out.println("exception get key: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private static PublicKey readPublicKeyFromFile(String fileName) throws IOException {

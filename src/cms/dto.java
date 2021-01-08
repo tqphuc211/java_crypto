@@ -8,6 +8,7 @@ public class dto {
     private String state;
     private String public_key;
     private String token;
+    private String cer;
 
     public int getId() {
         return id;
@@ -63,5 +64,13 @@ public class dto {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public String getCer() {
+        return cer;
+    }
+
+    public void setCer(String cer) {
+        this.cer = cer;
     }
 }

@@ -1,5 +1,8 @@
 package cms;
 
+import com.google.gson.JsonObject;
+import sercure.Signing;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -88,13 +91,13 @@ public class dao {
                     acc.setName(rs.getString("name"));
                     acc.setIp(rs.getString("ip"));
                     acc.setState(rs.getString("state"));
-                    acc.setPublic_key(rs.getString("public_key"));
+//                    acc.setPublic_key(rs.getString("public_key"));
 
                     System.out.println("ID = " + acc.getId());
                     System.out.println("NAME = " + acc.getName());
                     System.out.println("IP = " + acc.getIp());
                     System.out.println("STATE = " + acc.getState());
-                    System.out.println("KEY = " + acc.getPublic_key());
+//                    System.out.println("KEY = " + acc.getPublic_key());
                     System.out.println();
 
                     rs.close();
@@ -163,12 +166,16 @@ public class dao {
             Connection conn = DriverManager.getConnection(dbURL);
             if (conn != null) {
                 Statement stmt = conn.createStatement();
-                String query = "UPDATE account SET token='" + acc.getToken() + "' WHERE id=" + acc.getId() + ";";
+                String query = "UPDATE account SET token='" + acc.getToken() + "', "
+                        + "cer='" + acc.getCer() + "' "
+                        + "WHERE id=" + acc.getId() + ";";
                 stmt.executeUpdate(query);
 
                 stmt.close();
 
                 conn.close();
+
+                return acc;
             }
         } catch (ClassNotFoundException ex) {
             ex.printStackTrace();
@@ -186,6 +193,9 @@ public class dao {
             if (conn != null) {
                 Statement stmt = conn.createStatement();
                 String query = "UPDATE account SET public_key='" + acc.getPublic_key() + "' WHERE id=" + acc.getId() + ";";
+                stmt.executeUpdate(query);
+
+                query = "UPDATE account SET cer='" + acc.getCer() + "' WHERE id=" + acc.getId() + ";";
                 stmt.executeUpdate(query);
 
                 stmt.close();

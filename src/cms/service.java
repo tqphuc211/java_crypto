@@ -3,7 +3,11 @@ package cms;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import sercure.RSA;
+import sercure.Signing;
 
+import java.security.interfaces.RSAPrivateKey;
+import java.util.Base64;
 import java.util.List;
 
 public class service {
@@ -117,8 +121,45 @@ public class service {
     }
 
     public static JsonObject updateKey(String ms) {
-        String str = "{\"status_code\":200}";
-        JsonObject rs = new JsonParser().parse(str).getAsJsonObject();
+        JsonObject rs = new JsonObject();
+
+        JsonObject data = null;
+        JsonObject obj = null;
+        try {
+            obj = new JsonParser().parse(ms).getAsJsonObject();
+            data = obj.get("data").getAsJsonObject();
+        } catch (Exception ex) {
+            return returnError(400);
+        }
+        if (obj == null || data == null)
+            return returnError(400);
+
+        dto acc = new dto();
+        acc.setId(data.get("id").getAsInt());
+        acc.setToken(data.get("token").getAsString());
+//        acc.setPublic_key(data.get("key").getAsString());
+        acc.setPublic_key(Base64.getEncoder().encodeToString(RSA.getPublicKey()));
+
+
+        try {
+            JsonObject cerObj = new JsonObject();
+            cerObj.addProperty("id", acc.getId());
+            cerObj.addProperty("public_key", acc.getPublic_key());
+            byte[] sign = Signing.rsaSign((RSAPrivateKey) RSA.getPrivateKey(), cerObj.toString().getBytes());
+            cerObj.addProperty("sign", Base64.getEncoder().encodeToString(sign));
+            acc.setCer(cerObj.toString());
+        } catch (Exception ex) {
+            returnLogicError(415, "Lỗi tạo certificate");
+        }
+
+        acc = dao.updateToken(acc);
+        if (acc == null)
+            return returnLogicError(416, "Lỗi không thể cập nhật key");
+
+
+        rs.addProperty("status_code", 200);
+        rs.add("data", new JsonParser().parse(new Gson().toJson(acc)));
+
         return rs;
     }
 
