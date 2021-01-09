@@ -16,10 +16,13 @@ public class service {
 
         JsonObject obj = null;
         String cmd = "";
+        String request_id = "";
 
         try {
             obj = new JsonParser().parse(ms).getAsJsonObject();
             cmd = obj.get("cmd").getAsString();
+            if (obj.get("request_id") != null)
+                request_id = obj.get("request_id").getAsString();
         } catch (Exception ex) {
             return returnError(400);
         }
@@ -45,6 +48,7 @@ public class service {
         }
         if (rs != null) {
             rs.addProperty("cmd", cmd);
+            rs.addProperty("request_id", request_id);
         }
         return rs;
     }

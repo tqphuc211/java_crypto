@@ -100,10 +100,9 @@ public class RSA {
             privKey = readPrivateKeyFromFile(config.release.get(config.PRIVATE_KEY_PATH));            //  private key
             keyDecipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");        // initialize the cipher...
             keyDecipher.init(Cipher.DECRYPT_MODE, privKey);
-            System.out.println(">>AES>" + Base64.getEncoder().encodeToString(keyDecipher.doFinal(encryptedMessage)));
+//            System.out.println(">>AES>" + Base64.getEncoder().encodeToString(keyDecipher.doFinal(encryptedMessage)));
             message = keyDecipher.doFinal(encryptedMessage);
-            System.out.println();
-            System.out.println(" AES key after decryption : " + message);
+            System.out.println(">>AES key after decryption>" + Base64.getEncoder().encodeToString(message));
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("exception decrypting the aes key: " + e.getMessage());

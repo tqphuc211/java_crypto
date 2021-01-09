@@ -10,6 +10,7 @@ import java.security.*;
 
 import cms.dao;
 
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -19,6 +20,8 @@ import java.net.Socket;
 
 import javax.crypto.*;
 import javax.crypto.spec.SecretKeySpec;
+
+import config.config;
 
 public class Server {
     int clientId = 0;
@@ -48,8 +51,9 @@ public class Server {
             while (true) {
                 Socket socket = serverSocket.accept();  // accepting the connection.
                 String ip = (((InetSocketAddress) socket.getRemoteSocketAddress()).getAddress()).toString().replace("/", "");
-                System.out.println(">>IP: " + ip);
-                System.out.println(">>Accept client from IP: " + socket.getRemoteSocketAddress().toString());
+//                System.out.println(">>IP: " + ip);
+//                System.out.println(">>Accept client from IP: " + socket.getRemoteSocketAddress().toString());
+                config.log("Accept client from IP: " + socket.getRemoteSocketAddress().toString());
                 clientThread t = new clientThread(socket, ++clientId, ip);
                 t.start();
                 cThread.put(clientId + "", t);
@@ -80,9 +84,11 @@ public class Server {
             message m;
 
             try {
-                sendToClient(new message(RSA.getPublicKey()));
+                byte[] RSA_public_key = RSA.getPublicKey();
+                config.log("Send RSA public key to client: " + Base64.getEncoder().encodeToString(RSA_public_key));
+                sendToClient(new message(RSA_public_key));
             } catch (Exception ex) {
-                System.out.println("Error send public key to client " + clientIp);
+                config.log("Error send public key to client " + clientIp);
             }
 
             while (true) {
@@ -90,7 +96,7 @@ public class Server {
                     m = (message) sInput.readObject();
 
                 } catch (ClassNotFoundException e) {
-                    System.out.println("Class not found while reading the message object");
+                    config.log("Class not found while reading the message object");
                     return;
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -100,12 +106,12 @@ public class Server {
                 if (i == 0) {
                     if (m.getData() != null) {
                         byte[] decryptedMessage = RSA.decryptMessage(m.getData());
-                        System.out.println(">>decryptedMessage:" + decryptedMessage);
+                        config.log("Receive AES key from client >> decryptedMessage: " + Base64.getEncoder().encodeToString(decryptedMessage));
                         AESKey = new SecretKeySpec(decryptedMessage, "AES");
-                        System.out.println();
+//                        System.out.println();
                         i++;
                     } else {
-                        System.out.println("Error in decrypting AES key in clientThread.run()");
+                        config.log("Error in decrypting AES key in clientThread.run()");
                         System.exit(1);
                     }
                 } else {
@@ -117,6 +123,7 @@ public class Server {
                         try {
                             message toSend = null;
                             byte[] encryptedmessage = AES.encryptMessage(rs.toString(), AESKey);
+                            config.log("Response to Client (" + clientIp + ") by AES key: " + Base64.getEncoder().encodeToString(AESKey.getEncoded()));
                             toSend = new message(encryptedmessage);
                             sendToClient(toSend);
                         } catch (Exception ex) {
