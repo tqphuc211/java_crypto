@@ -231,12 +231,12 @@ public class dao {
                     acc.setState(rs.getString("state"));
                     acc.setPublic_key(rs.getString("public_key"));
 
-                    System.out.println("ID = " + acc.getId());
-                    System.out.println("NAME = " + acc.getName());
-                    System.out.println("IP = " + acc.getIp());
-                    System.out.println("STATE = " + acc.getState());
-                    System.out.println("KEY = " + acc.getPublic_key());
-                    System.out.println();
+//                    System.out.println("ID = " + acc.getId());
+//                    System.out.println("NAME = " + acc.getName());
+//                    System.out.println("IP = " + acc.getIp());
+//                    System.out.println("STATE = " + acc.getState());
+//                    System.out.println("KEY = " + acc.getPublic_key());
+//                    System.out.println();
 
                     rsList.add(acc);
                 }

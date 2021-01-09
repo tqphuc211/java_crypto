@@ -119,7 +119,7 @@ public class Server {
 //                        showMessage(clientId, clientIp, m.getData(), AESKey);
                         config.log("Receive from Client [" + clientId + "] (" + clientIp + ") by AES key: " + Base64.getEncoder().encodeToString(AESKey.getEncoded()));
                         byte[] msg = AES.decryptMessage(m.getData(), AESKey);
-                        config.log("Proccessing request: " + msg);
+                        config.log("Proccessing request: " + new String(msg));
                         JsonObject rs = service.route(msg, clientIp);
                         config.log(">>rs> " + rs.toString());
                         try {
