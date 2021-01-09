@@ -38,7 +38,6 @@ public class Server {
 //        rsa.createRSA();
         int port = 8002;
         cThread = new HashMap<>();
-        dao.getListAccount("offline");
         Server server = new Server(port);
         server.start();
     }
@@ -53,8 +52,9 @@ public class Server {
                 String ip = (((InetSocketAddress) socket.getRemoteSocketAddress()).getAddress()).toString().replace("/", "");
 //                System.out.println(">>IP: " + ip);
 //                System.out.println(">>Accept client from IP: " + socket.getRemoteSocketAddress().toString());
-                config.log("Accept client from IP: " + socket.getRemoteSocketAddress().toString());
-                clientThread t = new clientThread(socket, ++clientId, ip);
+                clientId++;
+                config.log("Accept client [" + clientId + "] from IP: " + socket.getRemoteSocketAddress().toString());
+                clientThread t = new clientThread(socket, clientId, ip);
                 t.start();
                 cThread.put(clientId + "", t);
             }
@@ -85,10 +85,10 @@ public class Server {
 
             try {
                 byte[] RSA_public_key = RSA.getPublicKey();
-                config.log("Send RSA public key to client: " + Base64.getEncoder().encodeToString(RSA_public_key));
+                config.log("Send RSA public key to client [" + clientId + "]: " + Base64.getEncoder().encodeToString(RSA_public_key));
                 sendToClient(new message(RSA_public_key));
             } catch (Exception ex) {
-                config.log("Error send public key to client " + clientIp);
+                config.log("Error send public key to client [" + clientId + "] ip: " + clientIp);
             }
 
             while (true) {
@@ -106,7 +106,7 @@ public class Server {
                 if (i == 0) {
                     if (m.getData() != null) {
                         byte[] decryptedMessage = RSA.decryptMessage(m.getData());
-                        config.log("Receive AES key from client >> decryptedMessage: " + Base64.getEncoder().encodeToString(decryptedMessage));
+                        config.log("Receive AES key from client [" + clientId + "] (" + clientIp + ") >> decryptedMessage: " + Base64.getEncoder().encodeToString(decryptedMessage));
                         AESKey = new SecretKeySpec(decryptedMessage, "AES");
 //                        System.out.println();
                         i++;
@@ -117,13 +117,15 @@ public class Server {
                 } else {
                     if (m.getData() != null) {
 //                        showMessage(clientId, clientIp, m.getData(), AESKey);
+                        config.log("Receive from Client [" + clientId + "] (" + clientIp + ") by AES key: " + Base64.getEncoder().encodeToString(AESKey.getEncoded()));
                         byte[] msg = AES.decryptMessage(m.getData(), AESKey);
+                        config.log("Proccessing request: " + msg);
                         JsonObject rs = service.route(msg, clientIp);
-                        System.out.println(">>rs> \n" + rs.toString());
+                        config.log(">>rs> " + rs.toString());
                         try {
                             message toSend = null;
                             byte[] encryptedmessage = AES.encryptMessage(rs.toString(), AESKey);
-                            config.log("Response to Client (" + clientIp + ") by AES key: " + Base64.getEncoder().encodeToString(AESKey.getEncoded()));
+                            config.log("Response to Client [" + clientId + "] (" + clientIp + ") by AES key: " + Base64.getEncoder().encodeToString(AESKey.getEncoded()));
                             toSend = new message(encryptedmessage);
                             sendToClient(toSend);
                         } catch (Exception ex) {

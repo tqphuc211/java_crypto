@@ -17,6 +17,6 @@ public class config {
     public static void log(String msg) {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yy/MM/dd HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
-        System.out.println(dtf.format(now) + ": " + msg);
+        System.out.println("\n\n----------------\n" + dtf.format(now) + ": " + msg);
     }
 }

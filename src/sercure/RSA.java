@@ -102,7 +102,7 @@ public class RSA {
             keyDecipher.init(Cipher.DECRYPT_MODE, privKey);
 //            System.out.println(">>AES>" + Base64.getEncoder().encodeToString(keyDecipher.doFinal(encryptedMessage)));
             message = keyDecipher.doFinal(encryptedMessage);
-            System.out.println(">>AES key after decryption>" + Base64.getEncoder().encodeToString(message));
+            config.log(">>AES key after decryption>" + Base64.getEncoder().encodeToString(message));
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("exception decrypting the aes key: " + e.getMessage());
