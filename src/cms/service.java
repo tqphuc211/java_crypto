@@ -3,17 +3,21 @@ package cms;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import sercure.Hash;
 import sercure.RSA;
 import sercure.Signing;
 
+import javax.crypto.spec.PBEKeySpec;
+import java.security.SecureRandom;
 import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.KeySpec;
 import java.util.Base64;
 import java.util.List;
 
 public class service {
     public static synchronized JsonObject route(byte[] msg, String ip) {
         String ms = new String(msg);
-        
+
         JsonObject obj = null;
         String cmd = "";
         String request_id = "";
@@ -73,10 +77,20 @@ public class service {
             return returnLogicError(411, "Tên đăng nhập đã tồn tại");
         }
 
+        SecureRandom random = new SecureRandom();
+        byte[] salt = new byte[16];
+        random.nextBytes(salt);
+
+        String pass = Hash.PBKDF2(data.get("pass").getAsString(), salt);
+        if (pass.equals("")) {
+            return returnLogicError(418, "Lỗi hash password");
+        }
+
         acc = new dto();
         acc.setName(data.get("name").getAsString());
         //TODO hash password
-        acc.setPass(data.get("pass").getAsString());
+        acc.setSalt(Base64.getEncoder().encodeToString(salt));
+        acc.setPass(pass);
         acc.setState("offline");
 
         dto rsInsert = dao.signup(acc);
@@ -105,7 +119,13 @@ public class service {
         if (obj == null || data == null)
             return returnError(400);
 
-        dto acc = dao.login(data.get("name").getAsString(), data.get("pass").getAsString());
+        dto acc = dao.findByName(data.get("name").getAsString());
+        String pass = Hash.PBKDF2(data.get("pass").getAsString(), Base64.getDecoder().decode(acc.getSalt()));
+        if (pass.equals("")) {
+            return returnLogicError(418, "Lỗi hash password");
+        }
+
+        acc = dao.login(data.get("name").getAsString(), pass);
         if (acc == null)
             return returnLogicError(404, "Tài khoản không đúng");
         setLoginInfo(acc, ip);

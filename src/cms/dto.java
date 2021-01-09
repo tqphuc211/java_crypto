@@ -9,6 +9,7 @@ public class dto {
     private String public_key;
     private String token;
     private String cer;
+    private String salt;
 
     public int getId() {
         return id;
@@ -72,5 +73,13 @@ public class dto {
 
     public void setCer(String cer) {
         this.cer = cer;
+    }
+
+    public String getSalt() {
+        return salt;
+    }
+
+    public void setSalt(String salt) {
+        this.salt = salt;
     }
 }

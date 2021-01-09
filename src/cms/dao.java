@@ -26,6 +26,7 @@ public class dao {
                     acc.setIp(rs.getString("ip"));
                     acc.setState(rs.getString("state"));
                     acc.setPublic_key(rs.getString("public_key"));
+                    acc.setSalt(rs.getString("salt"));
 
                     rs.close();
                     stmt.close();
@@ -49,13 +50,14 @@ public class dao {
             Connection conn = DriverManager.getConnection(dbURL);
             if (conn != null) {
                 Statement stmt = conn.createStatement();
-                String query = "INSERT INTO account (name, pass, ip, state, public_key, token) VALUES ("
+                String query = "INSERT INTO account (name, pass, ip, state, public_key, token, salt) VALUES ("
                         + "'" + acc.getName() + "', "
                         + "'" + acc.getPass() + "', "
                         + "'" + acc.getIp() + "', "
                         + "'" + acc.getState() + "', "
                         + "'" + acc.getPublic_key() + "', "
-                        + "'" + acc.getToken() + "'"
+                        + "'" + acc.getToken() + "',"
+                        + "'" + acc.getSalt() + "'"
                         + ");";
                 stmt.executeUpdate(query);
 
