@@ -43,7 +43,9 @@ public class service {
                 rs = getListUser(ms);
                 break;
         }
-
+        if (rs != null) {
+            rs.addProperty("cmd", cmd);
+        }
         return rs;
     }
 
