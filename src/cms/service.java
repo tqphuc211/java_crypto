@@ -163,8 +163,9 @@ public class service {
         dto acc = new dto();
         acc.setId(data.get("id").getAsInt());
         acc.setToken(data.get("token").getAsString());
-//        acc.setPublic_key(data.get("key").getAsString());
-        acc.setPublic_key(Base64.getEncoder().encodeToString(RSA.getPublicKey()));
+        acc.setPublic_key(data.get("key").getAsString());
+//        test:
+//        acc.setPublic_key(Base64.getEncoder().encodeToString(RSA.getPublicKey()));
 
 
         try {
